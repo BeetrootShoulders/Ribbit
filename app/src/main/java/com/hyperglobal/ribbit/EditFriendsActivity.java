@@ -18,7 +18,7 @@ import com.parse.ParseUser;
 import java.util.List;
 
 
-public class EditFriendsActivity extends ListActivity {
+public class EditFriendsActivity extends ActionBarActivity implements UsersFragment.OnFragmentInteractionListener {
 
     public static final String TAG = EditFriendsActivity.class.getSimpleName();
 
@@ -27,11 +27,15 @@ public class EditFriendsActivity extends ListActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
+        supportRequestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
         setContentView(R.layout.activity_edit_friends);
     }
 
-    @Override
+    public void onFragmentInteraction(String string){
+
+    }
+
+    /*@Override
     protected void onResume() {
         super.onResume();
 
@@ -67,7 +71,7 @@ public class EditFriendsActivity extends ListActivity {
                 }
             }
         });
-    }
+    }*/
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
