@@ -1,6 +1,7 @@
 package com.hyperglobal.ribbit;
 
 import android.app.AlertDialog;
+import android.app.FragmentManager;
 import android.app.ListActivity;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
@@ -17,17 +18,18 @@ import com.parse.ParseUser;
 
 import java.util.List;
 
+// This activity is a container for a ListFragment that shows the users (UsersFragment). The fragment is added in the layout file.
 
 public class EditFriendsActivity extends ActionBarActivity implements UsersFragment.OnFragmentInteractionListener {
 
-    public static final String TAG = EditFriendsActivity.class.getSimpleName();
+    public static final String TAG = EditFriendsActivity.class.getSimpleName(); // TAG for Log messages
 
-    protected List<ParseUser> mUsers;
+    protected List<ParseUser> mUsers; // member variable for users
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        supportRequestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
+        supportRequestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS); // enable spinner for loading
         setContentView(R.layout.activity_edit_friends);
     }
 
@@ -35,43 +37,13 @@ public class EditFriendsActivity extends ActionBarActivity implements UsersFragm
 
     }
 
-    /*@Override
+    @Override
     protected void onResume() {
         super.onResume();
-
-        setProgressBarIndeterminateVisibility(true);
-
-        ParseQuery<ParseUser> query = ParseUser.getQuery(); // new query
-        query.orderByAscending(ParseConstants.KEY_USERNAME); // order results
-        query.setLimit(1000); // limit results to 1000
-        query.findInBackground(new FindCallback<ParseUser>() { // execute query
-            @Override
-            public void done(List<ParseUser> users, ParseException e) {
-                if (e == null){
-                    // Success
-                    setProgressBarIndeterminateVisibility(false);
-                    mUsers = users; // set member variable equal to retrieved list of users
-                    String[] usernames = new String[mUsers.size()]; // define new string array to hold user name list
-                    int i = 0; // init iteration var
-                    for (ParseUser user : mUsers){ // for each user in the list mUsers...
-                        usernames[i] = user.getUsername(); // assign slot in array with user name from retrieved list
-                        i++; // iterate
-                    }
-                    ArrayAdapter<String> adapter = new ArrayAdapter(
-                            EditFriendsActivity.this, android.R.layout.simple_list_item_checked, usernames); // initialise new adapter, pass in context, layout (a list with checkboxes), and the username array
-                    setListAdapter(adapter); // set the list adapter to the adapter we've just defined; ensure the class is extending ListActivity
-                } else {
-                    Log.e(TAG, e.getMessage());
-                    AlertDialog.Builder builder = new AlertDialog.Builder(EditFriendsActivity.this);
-                    builder.setTitle(R.string.generic_error_title)
-                            .setMessage(e.getMessage())
-                            .setPositiveButton(android.R.string.ok,null);
-                    AlertDialog dialog = builder.create();
-                    dialog.show();
-                }
-            }
-        });
-    }*/
+        FragmentManager fragmentManager = getFragmentManager();
+        UsersFragment list = new UsersFragment();
+        fragmentManager.beginTransaction().add(android.R.id.content, list).commit();
+    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {

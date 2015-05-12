@@ -5,7 +5,9 @@ import android.app.AlertDialog;
 import android.os.Bundle;
 import android.app.ListFragment;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
@@ -14,7 +16,9 @@ import com.hyperglobal.ribbit.dummy.DummyContent;
 import com.parse.FindCallback;
 import com.parse.ParseException;
 import com.parse.ParseQuery;
+import com.parse.ParseRelation;
 import com.parse.ParseUser;
+import com.parse.SaveCallback;
 
 import java.util.List;
 
@@ -30,6 +34,8 @@ public class UsersFragment extends ListFragment {
     public static final String TAG = EditFriendsActivity.class.getSimpleName();
 
     protected List<ParseUser> mUsers;
+    protected ParseRelation<ParseUser> mFriendsRelation;
+    protected ParseUser mCurrentUser;
 
     private OnFragmentInteractionListener mListener;
 
@@ -41,6 +47,12 @@ public class UsersFragment extends ListFragment {
     }
 
     @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        View rootview = inflater.inflate(R.layout.fragment_friends, container, false);
+        return rootview;
+    }
+
+    @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
     }
@@ -48,7 +60,11 @@ public class UsersFragment extends ListFragment {
     @Override
     public void onResume() {
         super.onResume();
-        // TODO: Change Adapter to display your content
+
+        mCurrentUser = ParseUser.getCurrentUser();
+        mFriendsRelation = mCurrentUser.getRelation(ParseConstants.KEY_FRIENDS_RELATION);
+
+        // Get list of all users
         ParseQuery<ParseUser> query = ParseUser.getQuery(); // new query
         query.orderByAscending(ParseConstants.KEY_USERNAME); // order results
         query.setLimit(1000); // limit results to 1000
@@ -64,9 +80,12 @@ public class UsersFragment extends ListFragment {
                         usernames[i] = user.getUsername(); // assign slot in array with user name from retrieved list
                         i++; // iterate
                     }
-                    ArrayAdapter<String> adapter = new ArrayAdapter(
-                            getActivity(), android.R.layout.simple_list_item_checked, usernames); // initialise new adapter, pass in context, layout (a list with checkboxes), and the username array
-                    setListAdapter(adapter); // set the list adapter to the adapter we've just defined; ensure the class is extending ListActivity
+                    ArrayAdapter<String> adapter = new ArrayAdapter<String>(
+                            getListView().getContext(), android.R.layout.simple_list_item_checked, usernames); // initialise new adapter, pass in context, layout (a list with checkboxes), and the username array
+                    setListAdapter(adapter); // set the list adapter to the adapter we've just defined; (ensure the class is extending ListFragment or ListActivity)
+                    getListView().setChoiceMode(ListView.CHOICE_MODE_MULTIPLE); // set the choice mode of the list (in this case multiple choices can be selected
+
+                    addFriendsCheckMark();
                 } else {
                     Log.e(TAG, e.getMessage());
                     AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
@@ -79,8 +98,27 @@ public class UsersFragment extends ListFragment {
             }
         });
 
+    }
 
+    private void addFriendsCheckMark() {
+        mFriendsRelation.getQuery().findInBackground(new FindCallback<ParseUser>() { // new query - get relation info
+            @Override
+            public void done(List<ParseUser> friends, ParseException e) {
+                if (e == null){ // if query successful
+                    for (int i = 0; i < mUsers.size(); i++){ // go through the mUsers list
+                        ParseUser user = mUsers.get(i); // get current mUser and assign to user
 
+                        for (ParseUser friend : friends){ // go through list
+                            if (friend.getObjectId().equals(user.getObjectId())){ // if list user matches blah blah blah
+                                getListView().setItemChecked(i, true);
+                            }
+                        }
+                    }
+                } else {
+                    Log.e(TAG, e.getMessage());
+                }
+            }
+        });
     }
 
     @Override
@@ -104,11 +142,27 @@ public class UsersFragment extends ListFragment {
     public void onListItemClick(ListView l, View v, int position, long id) {
         super.onListItemClick(l, v, position, id);
 
-        if (null != mListener) {
+        /*if (null != mListener) {
             // Notify the active callbacks interface (the activity, if the
             // fragment is attached to one) that an item has been selected.
             mListener.onFragmentInteraction(DummyContent.ITEMS.get(position).id);
+        }*/
+
+        if (getListView().isItemChecked(position)){
+            mFriendsRelation.add(mUsers.get(position));
+            mCurrentUser.saveInBackground(new SaveCallback() {
+                @Override
+                public void done(ParseException e) {
+                    if (e != null){
+                        Log.e(TAG, e.getMessage());
+                    }
+                }
+            });
+        } else {
+
         }
+
+
     }
 
     /**
